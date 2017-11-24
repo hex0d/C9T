@@ -161,11 +161,11 @@ void loop() {
   Serial.println("Nao ha recargas");
 
   /*if (isBlocked()) /////////////// JUST FOR TESTING ///////////
-  {
+    {
     unblock();
     resetAuth();
     return;
-  }*/
+    }*/
   if (isBlocked())
   {
     Serial.print("Blocked");
@@ -177,13 +177,19 @@ void loop() {
   int intCredit = atoi(creditBack);
   Serial.println("Credit Before");
   Serial.println(intCredit);
-
+  if ((intCredit -= 350) > 0) {
   intCredit -= 350;
   itoa(intCredit, finalCred, 10);
-  writeBlock(CREDIT, finalCred);
-  Serial.println("Credit after");
-  Serial.println(intCredit);
-  
+    writeBlock(CREDIT, finalCred);
+    Serial.println("Credit after");
+    Serial.println(intCredit);
+  }
+  else {
+    Serial.println("Saldo insuficiente");
+    resetAuth();
+    return;
+  }
+
 
   writeBlock(BLOCKED, blockLuch);
 
