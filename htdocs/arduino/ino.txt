@@ -1,0 +1,118 @@
+/**
+ * @example TCPClientSingleUNO.ino
+ * @brief The TCPClientSingleUNO demo of library WeeESP8266. 
+ * @author Wu Pengfei<pengfei.wu@itead.cc> 
+ * @date 2015.03
+ * 
+ * @par Copyright:
+ * Copyright (c) 2015 ITEAD Intelligent Systems Co., Ltd. \n\n
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation; either version 2 of
+ * the License, or (at your option) any later version. \n\n
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+#include "ESP8266.h"
+#include <SoftwareSerial.h>
+
+#define SSID        "Redmi"
+#define PASSWORD    "leolindo"
+#define HOST_NAME   "192.168.43.178"
+#define HOST_PORT   (6969)
+
+SoftwareSerial mySerial(2, 3); /* RX:D3, TX:D2 */
+ESP8266 wifi(mySerial);
+
+void setup(void)
+{
+    Serial.begin(9600);
+    Serial.print("setup begin\r\n");
+    
+    Serial.print("FW Version:");
+    Serial.println(wifi.getVersion().c_str());
+      
+    if (wifi.setOprToStationSoftAP()) {
+        Serial.print("to station + softap ok\r\n");
+    } else {
+        Serial.print("to station + softap err\r\n");
+    }
+ 
+    if (wifi.joinAP(SSID, PASSWORD)) {
+        Serial.print("Join AP success\r\n");
+        Serial.print("IP:");
+        Serial.println( wifi.getLocalIP().c_str());       
+    } else {
+        Serial.print("Join AP failure\r\n");
+    }
+    
+    if (wifi.disableMUX()) {
+        Serial.print("single ok\r\n");
+    } else {
+        Serial.print("single err\r\n");
+    }
+    
+    Serial.print("setup end\r\n");
+}
+ 
+void loop(void)
+{
+    char primeiraParte[] = "GET /arduino/getdata.php?ra=";
+    char segundaParte[] = "&ra=";
+    char terceiraParte[] = "&cred=";
+    char quartaParte[] =  " HTTP/1.1\r\nHost: 192.168.43.178\r\n\r\n";
+
+    char flag[] = "1";
+    char ra[] = "1828568";
+    char cred[] = "100";
+    char* hello= new char[300];
+    
+    strcat(hello,primeiraParte);
+    //strcat(hello,flag);
+    //strcat(hello,segundaParte);
+    strcat(hello,ra);
+    //strcat(hello,terceiraParte);
+    //strcat(hello,cred);
+    strcat(hello,quartaParte);
+    Serial.println(hello);
+    
+    uint8_t buffer[150] = {0};
+    
+    if (wifi.createTCP(HOST_NAME, HOST_PORT)) {
+        Serial.print("create tcp ok\r\n");
+    } else {
+        Serial.print("create tcp err\r\n");
+    }
+    delay(10);
+    //char hello[] = "GET /arduino/savedata.php?flag= &ra=1822569&cred=130 HTTP/1.0\r\nHost: 192.168.43.178\r\n\r\n";
+
+    
+
+    
+    wifi.send((const uint8_t*)hello, strlen(hello));
+    delete [] hello;
+    char buffer2[150];
+    uint32_t len = wifi.recv(buffer, sizeof(buffer), 10000);
+    if (len > 0) {
+        for(uint32_t i = 0; i < len; i++){
+            buffer2[i]= (char)buffer[i];
+        }
+    }
+    delete [] buffer;
+    String buffer3 = String(buffer2);
+    Serial.println(buffer3);
+    
+    if (wifi.releaseTCP()) {
+        Serial.print("release tcp ok\r\n");
+    } else {
+        Serial.print("release tcp err\r\n");
+    }
+
+    delay(5000);
+}
+     
