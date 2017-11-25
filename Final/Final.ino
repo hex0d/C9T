@@ -4,6 +4,8 @@
 #include <MFRC522.h>
 //#include <math.h>
 
+#include <LiquidCrystal.h>
+
 ////-- for esp8266 setup --////
 
 #include "ESP8266.h"
@@ -36,6 +38,7 @@
 
 /*############################################################################ SETS ############################################################################*/
 
+LiquidCrystal lcd(8, 15, 7, 6, 5, 4);
 
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 MFRC522::MIFARE_Key key;
@@ -85,6 +88,10 @@ void setup() {
   }
 
   Serial.print("setup end\r\n");
+  lcd.begin(16, 2);
+  lcd.clear();
+  lcd.print(" Aprox. o Card");
+
 }
 
 
@@ -94,7 +101,7 @@ void loop() {
   if ( ! mfrc522.PICC_IsNewCardPresent())
   {
     //Serial.print("nnc:");
-    //delay(2000);
+    //delay(1000);
     return;
 
   }
@@ -155,7 +162,14 @@ void loop() {
 
     printBlock(creditBack);
     resetAuth();
-    Serial.println("Recarregou");
+    lcd.clear();
+    lcd.print("Recarga: ");
+    lcd.print(recharge);
+    delay (1000);
+    lcd.clear();
+    lcd.print(" Aprox. o Card");
+    //lcd.print(recharge);
+
     return;
   }
   Serial.println("Nao ha recargas");
@@ -165,34 +179,45 @@ void loop() {
     unblock();
     resetAuth();
     return;
-    }*/
-  if (isBlocked())
-  {
+    }
+    /*if (isBlocked())
+    {
     Serial.print("Blocked");
     resetAuth();
     return;
-  }
+    }*/
 
   readBlock(CREDIT, creditBack);
   int intCredit = atoi(creditBack);
   Serial.println("Credit Before");
   Serial.println(intCredit);
-  if ((intCredit -= 350) > 0) {
-  intCredit -= 350;
-  itoa(intCredit, finalCred, 10);
+  int checkCred = intCredit;
+  if ((checkCred -= 350) > 0) {
+    intCredit -= 350;
+    itoa(intCredit, finalCred, 10);
     writeBlock(CREDIT, finalCred);
-    Serial.println("Credit after");
-    Serial.println(intCredit);
+    float fltCred = (float)intCredit;
+    fltCred /=100;
+    lcd.clear();
+    lcd.print("Cred:");
+    lcd.print(fltCred);
+
   }
   else {
-    Serial.println("Saldo insuficiente");
+    lcd.clear();
+    lcd.print("  Sem Saldo");
+    delay(1000);
+    lcd.clear();
+    lcd.print(" Aprox. o Card");
     resetAuth();
     return;
   }
 
 
   writeBlock(BLOCKED, blockLuch);
-
+  delay(1000);
+  lcd.clear();
+  lcd.print(" Aprox. o Card");
   resetAuth();
 
 }
@@ -239,7 +264,13 @@ void printBlock(byte blockPRT[])
 
 /* ------------------ GRAVA ------------------*/
 
-
+void mensageminicial()
+{
+  lcd.clear();
+  lcd.print(" Aproxime o seu");
+  lcd.setCursor(0, 1);
+  lcd.print("aa");
+}
 int sqlCred() {
 
 }
