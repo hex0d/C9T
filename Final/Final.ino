@@ -55,17 +55,11 @@ byte raBack[18]; // RA array with buffer to transmit to the card
 byte creditBack[18]; // check if card is blocked
 byte zerar[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 byte finalCred[16] = "";
-//byte newRA[16] = {"RA:1858769"}; // Sample
-byte cardUID[8]; // UID
-//byte setCredit[16] = {"13350"};
 /*############################################################################ SETUP ############################################################################*/
 
 
 
 void setup() {
-  Serial.begin(9600);
-
-  ////-- card setup --////
 
   SPI.begin();
   mfrc522.PCD_Init();
@@ -75,22 +69,22 @@ void setup() {
   }
   ////-- esp8266 setup --////
   if (wifi.joinAP(SSID, PASSWORD)) {
-    Serial.print("Join AP success\r\n");
-    Serial.print("IP:");
-    Serial.println( wifi.getLocalIP().c_str());
+    //Serial.print("Join AP success\r\n");
+    //Serial.print("IP:");
+    //Serial.println( wifi.getLocalIP().c_str());
   } else {
-    Serial.print("Join AP failure\r\n");
+    //Serial.print("Join AP failure\r\n");
   }
   if (wifi.disableMUX()) {
-    Serial.print("single ok\r\n");
+    //Serial.print("single ok\r\n");
   } else {
-    Serial.print("single err\r\n");
+    //Serial.print("single err\r\n");
   }
 
   Serial.print("setup end\r\n");
-  lcd.begin(16, 2);
   lcd.clear();
   lcd.print(" Aprox. o Card");
+
 
 }
 
@@ -164,7 +158,7 @@ void loop() {
     resetAuth();
     lcd.clear();
     lcd.print("Recarga: ");
-    lcd.print(recharge);
+    lcd.print((float)recharge/100);
     delay (1000);
     lcd.clear();
     lcd.print(" Aprox. o Card");
@@ -172,35 +166,29 @@ void loop() {
 
     return;
   }
-  Serial.println("Nao ha recargas");
-
-  /*if (isBlocked()) /////////////// JUST FOR TESTING ///////////
-    {
-    unblock();
+  readBlock(BLOCKED,blockBack);
+  byte isBlock = atoi(blockBack);
+  if (isBlock){
+    lcd.clear();
+    lcd.print("   BLOCKED ");
+    delay(1000);
+    lcd.clear();
+    lcd.print(" Aprox. o Card");
     resetAuth();
     return;
-    }
-    /*if (isBlocked())
-    {
-    Serial.print("Blocked");
-    resetAuth();
-    return;
-    }*/
-
+  }
   readBlock(CREDIT, creditBack);
   int intCredit = atoi(creditBack);
-  Serial.println("Credit Before");
-  Serial.println(intCredit);
   int checkCred = intCredit;
   if ((checkCred -= 350) > 0) {
     intCredit -= 350;
     itoa(intCredit, finalCred, 10);
     writeBlock(CREDIT, finalCred);
-    float fltCred = (float)intCredit;
-    fltCred /=100;
+    //float fltCred = (float)intCredit;
+    //fltCred /=100;
     lcd.clear();
     lcd.print("Cred:");
-    lcd.print(fltCred);
+    lcd.print((float)intCredit/100);
 
   }
   else {
@@ -222,19 +210,6 @@ void loop() {
 
 }
 
-bool isBlocked()
-{
-  readBlock(BLOCKED, blockBack);
-  for (int i = 0; i < 16; i++)
-  {
-    if (blockBack[i] != 0)
-    {
-      return true;
-    }
-
-  }
-  return false;
-}
 
 
 void unblock()
@@ -263,17 +238,6 @@ void printBlock(byte blockPRT[])
 
 
 /* ------------------ GRAVA ------------------*/
-
-void mensageminicial()
-{
-  lcd.clear();
-  lcd.print(" Aproxime o seu");
-  lcd.setCursor(0, 1);
-  lcd.print("aa");
-}
-int sqlCred() {
-
-}
 
 int writeBlock(int blockNumber, byte arrayAddress[])
 {
@@ -370,6 +334,8 @@ void resetAuth()
   // Stop encryption on PCD
   mfrc522.PCD_StopCrypto1();
 }
+
+
 
 
 
